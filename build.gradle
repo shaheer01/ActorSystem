@@ -2,8 +2,11 @@ plugins {
     id 'java'
 }
 
+archivesBaseName = "ActorSystem"
+version = "${version != 'unspecified' ? version : '0.0.1'}"
+sourceCompatibility = '11'
 group 'org.example'
-version '1.0'
+version = "${version != 'unspecified' ? version : '0.0.1'}"
 
 repositories {
     mavenCentral()
@@ -18,13 +21,20 @@ dependencies {
     implementation "com.typesafe.akka:akka-testkit_2.11:2.4.11"
     implementation "com.typesafe.akka:akka-typed-experimental_2.11:2.4.11"
     implementation "com.typesafe.akka:akka-http-experimental_2.11:2.4.11"
-    implementation 'junit:junit:4.12'
     implementation  "org.mockito:mockito-core:2.2.15"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testCompile ('org.junit.jupiter:junit-jupiter:5.6.0')
 
 }
 
 test {
     useJUnitPlatform()
+}
+tasks.withType(Test) {
+    useJUnitPlatform()
+
+    testLogging {     // This is for logging and can be removed.
+        events("passed", "skipped", "failed")
+    }
 }
