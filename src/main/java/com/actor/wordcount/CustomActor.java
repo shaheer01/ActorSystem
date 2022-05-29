@@ -44,13 +44,13 @@ public class CustomActor<T> implements Runnable {
                         actionHandler.accept(this, message);
                         log.info("Received Message: " + message);
                         log.info("Running in thread: " + Thread.currentThread().getName());
-                        List<String> list = Stream.of(message.toString()).map(k -> k.split("\\W+")).flatMap(Arrays::stream)
-                                .collect(Collectors.toList());
-
-                        Map<String, Integer> countMap = list.stream()
-                                .collect(Collectors.toMap(k -> k.toLowerCase(), k -> 1, Integer::sum));
-
-                        log.info("Output:" + countMap);
+//                        List<String> list = Stream.of(message.toString()).map(k -> k.split("\\W+")).flatMap(Arrays::stream)
+//                                .collect(Collectors.toList());
+//
+//                        Map<String, Integer> countMap = list.stream()
+//                                .collect(Collectors.toMap(k -> k.toLowerCase(), k -> 1, Integer::sum));
+//
+//                        log.info("Output:" + countMap);
                 }
             }
         } catch(Exception e) {

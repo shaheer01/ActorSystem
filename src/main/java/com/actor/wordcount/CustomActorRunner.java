@@ -3,13 +3,19 @@ package com.actor.wordcount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CustomActorRunner {
 
-    private static CustomActor<String> pingActor;
-    private static SentenceSplitterCustomActor<String> pongActor;
+    private static CustomActor<String> layer1Actor;
+    private static CustomActor<String> layer2Actor;
+    private static CustomActor<List<String>> layer3Actor;
     private static final Logger log = LoggerFactory.getLogger(CustomActorRunner.class);
 
     public static void main(String[] args) throws InterruptedException {
@@ -21,41 +27,41 @@ public class CustomActorRunner {
             // Creating new threads with the default
             // ThreadFactory
             Thread thread
-                    = threadFactory.newThread(pingActor);
+                    = threadFactory.newThread(layer1Actor);
             // print the thread name
-            System.out.println(
+            log.info(
                     "Name given by threadFactory = "
                             + thread.getName());
 
             // start the thread
-//        thread.start();
-            pingActor = ActorSystem.create((actor, message) -> {
-                        if ("PING".equals(message)) {
-                            pongActor.send("Java is a language.Java is easy and i like Java.This is new line");
-                        } else if ("STOP".equals(message)) {
-                            System.exit(0);
-                        }
-                        System.out.println(message);
-                    }, (actor, exception) -> System.out.println(exception)
+        thread.start();
+            layer1Actor = ActorSystem.create((actor, message) -> {
+                        List<String> list = Stream.of(message).map(k -> k.split("\\.")).flatMap(Arrays::stream).collect(Collectors.toList());
+                        log.info("Output layer1Actor:" + list);
+                        //Spawning multiple actors for layer2Actor, layer1Actor.
+                        list.forEach(k -> layer2Actor.send(k));
+                    }, (actor, exception) -> log.error(String.valueOf(exception))
             );
 
-            pongActor = ActorSystem.createPong((actor, message) -> {
-                        if ("PONG".equals(message)) {
-                            //Problem: Here the input to this shud not be this line but output of :
-                            // pongActor.send("Java is a language.Java is easy and i like Java.This is new line");
-                            //Output:[Java is a language, Java is easy and i like Java, This is new line] i.e this
-                            // shud be the input to the below send function.
-                            //But dunno how to pass that coz run() return is void.
-                            pingActor.send("Java is a language.Java is easy and i like Java.This is new line");
-                        }
-                        System.out.println(message);
-                    }, (actor, exception) -> System.out.println(exception)
+
+            layer2Actor = ActorSystem.create((actor, message) -> {
+                List<String> list =
+                        Stream.of(message).map(k -> k.split("\\W+")).flatMap(Arrays::stream).collect(Collectors.toList());
+                log.info("Output layer2Actor:" + list);
+                layer3Actor.send(list);
+                    }, (actor, exception) -> log.error(String.valueOf(exception))
             );
 
-            pingActor.send("PING");
-            pongActor.send("PONG");
-            Thread.sleep(10);
-            pingActor.send("STOP");
+            layer3Actor = ActorSystem.create((actor, message) -> {
+                  Map<String, Integer> countMap = message.stream().collect(Collectors.toMap(k -> k.toLowerCase(), k -> 1,
+                          Integer::sum));
+                  log.info("Output layer1Actor:" +countMap);
+                countMap.forEach((key, value) -> log.info(key + " " + value));
+                    },  (actor, exception) -> log.error(String.valueOf(exception))
+            );
+
+            layer1Actor.send("Java is a language.Java is easy and i like Java.This is new line");
+
             ActorSystem.shutdown();
 
         }
