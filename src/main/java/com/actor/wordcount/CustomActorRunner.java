@@ -4,8 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
@@ -17,6 +19,7 @@ public class CustomActorRunner {
     private static CustomActor<String> layer2Actor;
     private static CustomActor<List<String>> layer3Actor;
     private static final Logger log = LoggerFactory.getLogger(CustomActorRunner.class);
+    private static final ConcurrentHashMap<String, Integer> finalOutput= new ConcurrentHashMap<String,Integer>();
 
     public static void main(String[] args) throws InterruptedException {
         for (int i = 1; i < 2; i++) {
@@ -42,7 +45,7 @@ public class CustomActorRunner {
                         list.forEach(k -> layer2Actor.send(k));
                     }, (actor, exception) -> log.error(String.valueOf(exception))
             );
-
+log.info("Printing layer1Actor:"+ layer1Actor);
 
             layer2Actor = ActorSystem.create((actor, message) -> {
                 List<String> list =
@@ -56,7 +59,16 @@ public class CustomActorRunner {
                   Map<String, Integer> countMap = message.stream().collect(Collectors.toMap(k -> k.toLowerCase(), k -> 1,
                           Integer::sum));
                   log.info("Output layer1Actor:" +countMap);
+                for(String key: countMap.keySet()){
+                    if(finalOutput.contains(key)){
+                        finalOutput.put(key,countMap.get(key)+1);
+                    }else{
+                        finalOutput.put(key,countMap.get(key));
+                    }
+                }
                 countMap.forEach((key, value) -> log.info(key + " " + value));
+                finalOutput.forEach((key, value) -> log.info(key + " " + value));
+                log.info(String.valueOf("Final wordcount" +finalOutput));
                     },  (actor, exception) -> log.error(String.valueOf(exception))
             );
 

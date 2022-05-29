@@ -35,6 +35,10 @@ public class CustomActor<T> implements Runnable {
         mailbox.offer(message);
     }
 
+//    public T ask(T message){
+//        return T;
+//    }
+
     @Override
     public void run() {
         try {
@@ -51,6 +55,7 @@ public class CustomActor<T> implements Runnable {
 //                                .collect(Collectors.toMap(k -> k.toLowerCase(), k -> 1, Integer::sum));
 //
 //                        log.info("Output:" + countMap);
+
                 }
             }
         } catch(Exception e) {
